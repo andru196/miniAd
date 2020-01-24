@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import unicodedata
 from django.db import models
 from django.contrib.auth.models import User
+import datetime
 
 # Create your models here.
 
@@ -35,7 +36,7 @@ class Advertisement(models.Model):
 
 
 class Photo(models.Model):
-    user = models.ForeignKey(User, default=1, on_delete=models.CASCADE)
-    image = models.ImageField()
-    ad = models.ForeignKey(Advertisement, on_delete=models.CASCADE)
-    name = models.CharField(max_length=256)
+    image = models.ImageField(null=False, upload_to='user_photo01')
+    ad = models.ForeignKey(Advertisement, on_delete=models.CASCADE, null=False)
+    createDT = models.DateTimeField(auto_now_add=True)
+    name = models.CharField(max_length=256, default='notitle ' + datetime.datetime.now().strftime("%d_%m_%Y_%H_%M"))
