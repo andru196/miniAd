@@ -1,10 +1,20 @@
 from rest_framework import serializers
+from .models import Photo, Advertisement
 from django.contrib.auth.models import User
+
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ['id', 'username']
+
+
+class PhotoSerializer(serializers.Serializer):
+    url = serializers.SerializerMethodField('get_photo_url')
+
+    def get_photo_url(self, obj):
+        if obj is not None:
+            return self.context['request'].build_absolute_uri(obj.image.url)
 
 
 class AdvertisementListSerializer(serializers.Serializer):
@@ -14,10 +24,13 @@ class AdvertisementListSerializer(serializers.Serializer):
 
     def get_photo_url(self, obj):
         if obj.photo is not None:
-            return self.context['request'].build_absolute_uri(obj.photo)
+            return self.context['request'].build_absolute_uri(obj.photo.image.url)
 
 
-class AdvertisementSerializer(serializers.Serializer):
+class AdvertisementSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Advertisement
+        fields = ('title', 'price', 'photos', 'id', 'user', 'description', 'createAt', 'category')
     id = serializers.IntegerField()
     user = UserSerializer()
     title = serializers.CharField(max_length=100)
@@ -25,19 +38,18 @@ class AdvertisementSerializer(serializers.Serializer):
     createAt = serializers.DateTimeField()
     price = serializers.IntegerField()
     category = serializers.CharField()
-    photo = serializers.SerializerMethodField('get_photo_url')
+    photos = PhotoSerializer(many=True)
 
     def get_photo_url(self, obj):
-        return self.context['request'].build_absolute_uri(obj.photo)
+        return self.context['request'].build_absolute_uri(obj.image)
 
     def create(self, validated_data):
         return AdvertisementSerializer.objects.create(**validated_data)
 
-    def update(self, instance, validated_data):
-        instance.title = validated_data.get('user', instance.title)
-        instance.title = validated_data.get('title', instance.title)
-        instance.description = validated_data.get('description', instance.description)
-        instance.author_id = validated_data.get('price', instance.author_id)
-        instance.title = validated_data.get('category', instance.title)
-        instance.save()
-        return instance
+    def __init__(self, *args, **kwargs):
+        super(serializers.Serializer, self).__init__(*args, **kwargs)
+        if 'context' in kwargs and 'fields_list' in kwargs['context']:
+            fields_list = kwargs['context']['fields_list']
+            fields_list = set(fields_list)
+            for field in set(self.fields) - fields_list:
+                self.fields.pop(field)
