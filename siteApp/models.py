@@ -23,7 +23,7 @@ class Advertisement(models.Model):
     title = models.CharField(max_length=200, verbose_name="Заголовок объявления", null=False, blank=False)
     description = models.TextField(max_length=1000, null=False, blank=False)
     price = models.PositiveIntegerField(null=False)
-    category = models.ForeignKey(Category, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, null=True)
     type = (
         (1, "Продам"),
         (2, "Куплю"),
@@ -36,7 +36,8 @@ class Advertisement(models.Model):
 
 
 class Photo(models.Model):
-    image = models.ImageField(null=False, upload_to='user_photo01')
+    image = models.ImageField(null=True, upload_to='user_photo01')
+    url = models.URLField(null=True)
     ad = models.ForeignKey(Advertisement, on_delete=models.CASCADE, null=False)
     createDT = models.DateTimeField(auto_now_add=True)
     name = models.CharField(max_length=256, default='notitle ' + datetime.datetime.now().strftime("%d_%m_%Y_%H_%M"))

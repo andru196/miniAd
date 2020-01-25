@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+
+from django.utils.decorators import method_decorator
+
 from .models import *
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .serializers import AdvertisementSerializer, AdvertisementListSerializer
 from django.core.paginator import Paginator, EmptyPage
-from rest_framework.generics import get_object_or_404
-
+from django.views.decorators.csrf import csrf_exempt
+from braces.views import CsrfExemptMixin
 
 class AdvertisementManyView(APIView):
     def get(self, request, pageN):
@@ -30,7 +33,9 @@ class AdvertisementManyView(APIView):
         return Response({"advertisements": serializer.data})
 
 
-class AdvertisementView(APIView):
+class AdvertisementView(APIView, CsrfExemptMixin):
+    authentication_classes = []
+
     def get(self, request, adID):
         if adID is None:
             return Response({"Error": "Не задан ID объявления"})
@@ -59,9 +64,15 @@ class AdvertisementView(APIView):
                                         context={'request': request, 'fields_list': extra_fields, 'enable_many_photo': enable_many_photo})
         return Response({"advertisement": serializer.data})
 
+    @csrf_exempt
     def post(self, request):
         article = request.data.get('advertisement')
         serializer = AdvertisementSerializer(data=article)
-        if serializer.is_valid(raise_exception=True):
+        code = '200'
+        if serializer.is_valid():
             ad_saved = serializer.save()
-        return Response({"success": "Advertisement '{}' created successfully".format(ad_saved.title)})
+            code = '201 Created'
+        else:
+            code = '500 Internal Server Error'
+        return Response({"message":
+                             {"Code": code, "AdvertisementId": ad_saved.id}})

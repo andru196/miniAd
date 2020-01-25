@@ -1,4 +1,3 @@
-from django.conf.urls import re_path
 from django.urls import path
 from .views import AdvertisementView, AdvertisementManyView
 
@@ -9,5 +8,5 @@ app_name = "advertisements"
 urlpatterns = [
     path('advertisements/<int:pageN>', AdvertisementManyView.as_view()),
     path('advertisement/<int:adID>', AdvertisementView.as_view()),
-    #re_path('advertisement', AdvertisementView.as_view()),
+    path('advertisement', AdvertisementView.as_view()),
 ]
