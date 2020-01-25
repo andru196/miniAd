@@ -12,9 +12,11 @@ class UserSerializer(serializers.ModelSerializer):
 class PhotoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Photo
-        fields = ['url']
-    url = serializers.SerializerMethodField('get_photo_url')
+        fields = ['url', 'link']
+        read_only_fields = ['link']
+
     url = serializers.URLField(write_only=True)
+    link = serializers.SerializerMethodField('get_photo_url', read_only=True)
 
     def get_photo_url(self, obj):
         if obj is not None and obj.image is not None and obj.image != '':
@@ -50,11 +52,11 @@ class AdvertisementSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         photos_data = validated_data.pop('photos')
-        data = Advertisement.objects.create(**validated_data)
+        ad = Advertisement.objects.create(**validated_data)
         for url in photos_data:
-            photo = Photo.objects.create(**url, ad=data)
+            photo = Photo.objects.create(**url, ad=ad)
             photo.save()
-        return data
+        return ad
 
     def __init__(self, *args, **kwargs):
         super(serializers.Serializer, self).__init__(*args, **kwargs)
