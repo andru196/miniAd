@@ -43,8 +43,8 @@ class AdvertisementSerializer(serializers.ModelSerializer):
         fields = ('title', 'price', 'photos', 'id', 'user', 'description', 'createAt', 'category')
     id = serializers.IntegerField(required=False)
     user = UserSerializer(required=False)
-    title = serializers.CharField(max_length=100)
-    description = serializers.CharField()
+    title = serializers.CharField(max_length=200)
+    description = serializers.CharField(max_length=1000)
     createAt = serializers.DateTimeField(required=False)
     price = serializers.IntegerField()
     category = serializers.CharField(required=False)
@@ -53,9 +53,13 @@ class AdvertisementSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         photos_data = validated_data.pop('photos')
         ad = Advertisement.objects.create(**validated_data)
+        i = 0
         for url in photos_data:
+            if i >= 3:
+                break
             photo = Photo.objects.create(**url, ad=ad)
             photo.save()
+            ++i
         return ad
 
     def __init__(self, *args, **kwargs):
